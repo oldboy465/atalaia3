@@ -2,7 +2,7 @@ import requests
 from typing import Dict, Any, Optional, Tuple
 
 class ESP32Client:
-    def __init__(self, primary_url: str = "http://atalaia2.local", fallback_url: str = "http://192.168.4.1", timeout: float = 3.0):
+    def __init__(self, primary_url: str = "http://atalaia2.local", fallback_url: str = "http://192.168.4.1", timeout: float = 3.5):
         self.primary_url = primary_url.rstrip('/')
         self.fallback_url = fallback_url.rstrip('/')
         self.timeout = timeout
@@ -10,7 +10,12 @@ class ESP32Client:
 
     def _resolve_url(self, endpoint: str) -> Tuple[Optional[requests.Response], str]:
         endpoint = endpoint.lstrip('/')
-        for base in [self.active_base_url, self.fallback_url, self.primary_url]:
+        candidates = [self.active_base_url, self.fallback_url, self.primary_url]
+        seen = set()
+        for base in candidates:
+            if base in seen:
+                continue
+            seen.add(base)
             url = f"{base}/{endpoint}"
             try:
                 res = requests.get(url, timeout=self.timeout)
@@ -25,16 +30,30 @@ class ESP32Client:
         res, _ = self._resolve_url("api/current")
         if res:
             try:
-                return res.json()
+                data = res.json()
+                if isinstance(data, dict):
+                    return data
             except ValueError:
                 return None
         return None
 
     def fetch_ring_buffer(self) -> Optional[bytes]:
         res, _ = self._resolve_url("atalaia_buffer.bin")
-        if res and len(res.content) > 0:
+        if res and res.content and len(res.content) > 0:
             return res.content
         return None
+
+    def purge_buffer(self) -> bool:
+        """Envia comando para redefinir o anel de metadados na memória Flash do ESP32."""
+        for base in [self.active_base_url, self.fallback_url]:
+            url = f"{base}/test?target=reset_buffer"
+            try:
+                res = requests.post(url, timeout=self.timeout)
+                if res.status_code == 200:
+                    return True
+            except requests.RequestException:
+                continue
+        return False
 
     def trigger_actuator(self, target: str) -> bool:
         target_map = {

@@ -1,5 +1,4 @@
 import sqlite3
-import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
@@ -9,7 +8,7 @@ class DatabaseManager:
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         return conn
 
@@ -20,13 +19,13 @@ class DatabaseManager:
                 CREATE TABLE IF NOT EXISTS telemetry (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    session_id INTEGER NOT NULL,
-                    uptime_sec INTEGER NOT NULL,
-                    temperature REAL NOT NULL,
-                    humidity REAL NOT NULL,
-                    mq135_raw INTEGER NOT NULL,
-                    rain_detected INTEGER NOT NULL,
-                    flame_detected INTEGER NOT NULL,
+                    session_id INTEGER NOT NULL DEFAULT 1,
+                    uptime_sec INTEGER NOT NULL DEFAULT 0,
+                    temperature REAL NOT NULL DEFAULT 0.0,
+                    humidity REAL NOT NULL DEFAULT 0.0,
+                    mq135_raw INTEGER NOT NULL DEFAULT 0,
+                    rain_detected INTEGER NOT NULL DEFAULT 0,
+                    flame_detected INTEGER NOT NULL DEFAULT 0,
                     heat_index REAL,
                     dew_point REAL,
                     gas_ppm REAL,
@@ -53,16 +52,16 @@ class DatabaseManager:
         """
         data = {
             "timestamp": sample.get("timestamp", datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")),
-            "session_id": sample["session_id"],
-            "uptime_sec": sample["uptime_sec"],
-            "temperature": sample["temperature"],
-            "humidity": sample["humidity"],
-            "mq135_raw": sample["mq135_raw"],
-            "rain_detected": 1 if sample["rain_detected"] else 0,
-            "flame_detected": 1 if sample["flame_detected"] else 0,
+            "session_id": int(sample.get("session_id", 1)),
+            "uptime_sec": int(sample.get("uptime_sec", 0)),
+            "temperature": float(sample.get("temperature", 0.0)),
+            "humidity": float(sample.get("humidity", 0.0)),
+            "mq135_raw": int(sample.get("mq135_raw", 0)),
+            "rain_detected": 1 if sample.get("rain_detected") else 0,
+            "flame_detected": 1 if sample.get("flame_detected") else 0,
             "heat_index": sample.get("heat_index"),
             "dew_point": sample.get("dew_point"),
-            "gas_ppm": sample.get("gas_ppm"),
+            "gas_ppm": sample.get("estimated_ppm") or sample.get("gas_ppm"),
             "is_anomaly": 1 if sample.get("is_anomaly") else 0,
             "source": source
         }
@@ -72,20 +71,31 @@ class DatabaseManager:
                 cursor.execute(query, data)
                 conn.commit()
                 return cursor.rowcount > 0
-            except sqlite3.Error:
+            except sqlite3.Error as err:
+                print(f"[DB ERROR] Falha no insert: {err}")
                 return False
 
     def insert_batch(self, samples: List[Dict[str, Any]], source: str = "SYNC") -> int:
+        if not samples:
+            return 0
         inserted = 0
         with self._get_connection() as conn:
             cursor = conn.cursor()
             for s in samples:
                 data = (
                     s.get("timestamp", datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")),
-                    s["session_id"], s["uptime_sec"], s["temperature"], s["humidity"],
-                    s["mq135_raw"], 1 if s["rain_detected"] else 0, 1 if s["flame_detected"] else 0,
-                    s.get("heat_index"), s.get("dew_point"), s.get("gas_ppm"),
-                    1 if s.get("is_anomaly") else 0, source
+                    int(s.get("session_id", 1)),
+                    int(s.get("uptime_sec", 0)),
+                    float(s.get("temperature", 0.0)),
+                    float(s.get("humidity", 0.0)),
+                    int(s.get("mq135_raw", 0)),
+                    1 if s.get("rain_detected") else 0,
+                    1 if s.get("flame_detected") else 0,
+                    s.get("heat_index"),
+                    s.get("dew_point"),
+                    s.get("estimated_ppm") or s.get("gas_ppm"),
+                    1 if s.get("is_anomaly") else 0,
+                    source
                 )
                 try:
                     cursor.execute("""

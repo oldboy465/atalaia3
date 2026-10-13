@@ -3,34 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}ATALAIA 3 - Análise Extrema & Telemetria{% endblock %}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>ATALAIA 3 - Análise Extrema & Telemetria Real-Time</title>
+  <!-- Chart.js com integridade garantida -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Socket.IO -->
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen overflow-x-hidden selection:bg-cyan-500 selection:text-black">
+<body>
   <div class="matrix-grid-overlay"></div>
   <div class="ambient-glow"></div>
 
-  <nav class="relative z-20 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl px-6 py-4 flex flex-wrap justify-between items-center">
-    <div class="flex items-center gap-3">
+  <nav class="top-nav">
+    <div class="brand-title">
       <div class="pulse-indicator-core"></div>
       <div>
-        <h1 class="text-xl font-extrabold tracking-wider bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
-          ATALAIA 3 // MATRIX
-        </h1>
-        <p class="text-xs text-slate-400 font-mono tracking-tight">Estação Headless • Telemetria & Derivados em Tempo Real</p>
+        <div class="brand-text-main">ATALAIA 3 // MATRIX OBSERVER</div>
+        <div class="brand-subtitle">Estação Autônoma • Ingestão LittleFS & Telemetria Viva</div>
       </div>
     </div>
-    <div class="flex items-center gap-3 mt-2 sm:mt-0">
-      <span id="connStatusBadge" class="badge-status badge-connecting">DESCONECTADO</span>
-      <button id="btnSyncBuffer" class="btn-action btn-sync">Sincronizar Buffer Flash</button>
-      <button id="btnOpenControl" class="btn-action btn-control">Hardware Actuators</button>
+
+    <div class="nav-actions">
+      <button id="btnToggleSound" class="btn-action">
+        <span id="soundIcon">🔊</span>
+        <span id="soundText">SOM ATIVO</span>
+      </button>
+
+      <button id="btnCopyBuffer" class="btn-action">
+        📥 COPIAR BUFFER
+      </button>
+
+      <button id="btnExtractBuffer" class="btn-action" style="color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.4);">
+        ⚡ EXTRAIR E PURGAR
+      </button>
+
+      <button id="btnOpenControl" class="btn-action" style="color: var(--accent-cyan);">
+        🎮 ATUADORES ESP32
+      </button>
+
+      <span id="connStatusBadge" class="badge-status badge-connecting">CONECTANDO...</span>
     </div>
   </nav>
 
-  <main class="relative z-10 max-w-[1700px] mx-auto p-4 md:p-6 space-y-6">
+  <main class="main-container">
     {% block content %}{% endblock %}
   </main>
 

@@ -5,13 +5,18 @@ from app import socketio, data_manager, esp_client
 live_worker_running = False
 
 def background_live_poller():
-    """Consulta o endpoint /api/current do ESP32 a cada 2 segundos e distribui via WebSocket."""
     global live_worker_running
+    print("[SOCKETIO] Background live poller ativado.")
     while live_worker_running:
-        current_raw = esp_client.get_current_telemetry()
-        if current_raw:
-            processed = data_manager.process_live_sample(current_raw)
-            socketio.emit("live_telemetry", processed)
+        try:
+            current_raw = esp_client.get_current_telemetry()
+            if current_raw:
+                processed = data_manager.process_live_sample(current_raw)
+                socketio.emit("live_telemetry", processed)
+        except Exception as err:
+            print(f"[POLLER WARN] Oscilação momentânea: {err}")
+        
+        # Intervalo entre as checagens contínuas (2 segundos)
         gevent.sleep(2.0)
 
 @socketio.on("connect")
