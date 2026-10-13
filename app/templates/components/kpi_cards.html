@@ -1,0 +1,43 @@
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+  <!-- TEMPERATURA -->
+  <div class="kpi-card group border-cyan-500/20">
+    <span class="kpi-label">Temperatura Real</span>
+    <div class="kpi-value text-cyan-400 group-hover:scale-105 transition-transform" id="kpiTemp">--.- <span class="text-sm">°C</span></div>
+    <span class="kpi-subtext" id="kpiDewPoint">Orvalho: --.- °C</span>
+  </div>
+
+  <!-- UMIDADE -->
+  <div class="kpi-card group border-blue-500/20">
+    <span class="kpi-label">Umidade Relativa</span>
+    <div class="kpi-value text-blue-400 group-hover:scale-105 transition-transform" id="kpiHum">--.- <span class="text-sm">%</span></div>
+    <span class="kpi-subtext" id="kpiAbsHum">Abs: --.- g/m³</span>
+  </div>
+
+  <!-- ÍNDICE DE CALOR -->
+  <div class="kpi-card group border-amber-500/20">
+    <span class="kpi-label">Sensação Térmica (HI)</span>
+    <div class="kpi-value text-amber-400 group-hover:scale-105 transition-transform" id="kpiHeatIndex">--.- <span class="text-sm">°C</span></div>
+    <span class="kpi-subtext" id="kpiVaporPress">Pressão: --.- hPa</span>
+  </div>
+
+  <!-- GÁS MQ-135 -->
+  <div class="kpi-card group border-emerald-500/20">
+    <span class="kpi-label">Qualidade do Ar (MQ)</span>
+    <div class="kpi-value text-emerald-400 group-hover:scale-105 transition-transform" id="kpiGasRaw">----</div>
+    <span class="kpi-subtext" id="kpiGasPpm">PPM: ~--- ppm</span>
+  </div>
+
+  <!-- CHUVA -->
+  <div class="kpi-card group border-sky-500/20" id="cardRain">
+    <span class="kpi-label">Sensor de Chuva</span>
+    <div class="kpi-value text-slate-300 font-extrabold" id="kpiRain">SECO</div>
+    <span class="kpi-subtext">Limiar ADC: 2500</span>
+  </div>
+
+  <!-- FOGO / RISCO -->
+  <div class="kpi-card group border-rose-500/20" id="cardFlame">
+    <span class="kpi-label">Risco de Incêndio</span>
+    <div class="kpi-value text-emerald-400 font-extrabold" id="kpiFlame">SEGURO</div>
+    <span class="kpi-subtext" id="kpiWarmup">Calibração OK</span>
+  </div>
+</div>

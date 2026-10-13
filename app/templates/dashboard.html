@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- FILTROS ULTRA DINÂMICOS -->
+<div class="glass-panel p-4 flex flex-wrap items-center justify-between gap-4">
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="text-xs uppercase font-mono text-cyan-400 font-bold">Janela Temporal:</span>
+    <button class="filter-chip active" data-range="15m">15 Min</button>
+    <button class="filter-chip" data-range="1h">1 Hora</button>
+    <button class="filter-chip" data-range="8h">8 Horas (Buffer Completo)</button>
+    <button class="filter-chip" data-range="all">Histórico Total</button>
+  </div>
+  <div class="flex items-center gap-2 text-xs">
+    <label class="text-slate-400 font-mono">De:</label>
+    <input type="datetime-local" id="filterStart" class="input-dark">
+    <label class="text-slate-400 font-mono">Até:</label>
+    <input type="datetime-local" id="filterEnd" class="input-dark">
+    <button id="btnApplyCustomFilter" class="btn-action bg-cyan-600 hover:bg-cyan-500">Filtrar</button>
+  </div>
+</div>
+
+<!-- CARDS DE KPIS, DERIVADOS E ÍNDICE DE RISCO -->
+{% include "components/kpi_cards.html" %}
+
+<!-- PAINEL CENTRAL DE GRÁFICOS EM TEMPO REAL -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="glass-panel p-5 relative overflow-hidden">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="chart-header-title">Dinâmica Psicrométrica & Calor</h3>
+      <span class="text-xs font-mono text-slate-400">Temp / Heat Index / Dew Point</span>
+    </div>
+    <div class="h-[320px]">
+      <canvas id="chartBioclimatic"></canvas>
+    </div>
+  </div>
+
+  <div class="glass-panel p-5 relative overflow-hidden">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="chart-header-title">Espectro de Gases MQ-135 & PPM</h3>
+      <span class="text-xs font-mono text-slate-400">ADC 12-bit vs Estimativa PPM</span>
+    </div>
+    <div class="h-[320px]">
+      <canvas id="chartGases"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="glass-panel p-5 lg:col-span-2">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="chart-header-title">Detecção de Anomalias & Bollinger Bands</h3>
+      <span class="text-xs font-mono text-purple-400">Isolation Forest + Z-Score Flag</span>
+    </div>
+    <div class="h-[280px]">
+      <canvas id="chartAnomalies"></canvas>
+    </div>
+  </div>
+
+  <div class="glass-panel p-5 flex flex-col justify-between">
+    <div>
+      <h3 class="chart-header-title mb-4">Matriz de Risco Crítico</h3>
+      {% include "components/realtime_gauge.html" %}
+    </div>
+    <div class="mt-4 pt-4 border-t border-slate-800 text-xs font-mono space-y-2">
+      <div class="flex justify-between"><span>Delta Temp Instantâneo:</span><span id="txtDeltaTemp" class="text-cyan-400 font-bold">0.0 °C/min</span></div>
+      <div class="flex justify-between"><span>Delta MQ Instantâneo:</span><span id="txtDeltaGas" class="text-amber-400 font-bold">0.0 ADC/min</span></div>
+      <div class="flex justify-between"><span>Probabilidade de Anomalia:</span><span id="txtAnomalyProb" class="text-purple-400 font-bold">0.0%</span></div>
+    </div>
+  </div>
+</div>
+
+{% include "components/control_modal.html" %}
+{% endblock %}
