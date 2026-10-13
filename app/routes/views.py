@@ -4,5 +4,10 @@ views_bp = Blueprint("views", __name__)
 
 @views_bp.route("/")
 def dashboard():
-    """Renderiza a interface central com o painel reativo e os gráficos animados."""
+    """Painel principal de gráficos, KPIs derivados e monitorização contínua."""
     return render_template("dashboard.html")
+
+@views_bp.route("/records")
+def records_manager():
+    """Página de gestão, auditoria e exclusão granular de registos."""
+    return render_template("records.html")

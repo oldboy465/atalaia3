@@ -6,17 +6,17 @@ live_worker_running = False
 
 def background_live_poller():
     global live_worker_running
-    print("[SOCKETIO] Background live poller ativado.")
+    print("[SOCKETIO] Background live poller ativo.")
     while live_worker_running:
         try:
             current_raw = esp_client.get_current_telemetry()
             if current_raw:
+                # Enriquece imediatamente com todos os derivados termodinâmicos e emite
                 processed = data_manager.process_live_sample(current_raw)
                 socketio.emit("live_telemetry", processed)
         except Exception as err:
             print(f"[POLLER WARN] Oscilação momentânea: {err}")
         
-        # Intervalo entre as checagens contínuas (2 segundos)
         gevent.sleep(2.0)
 
 @socketio.on("connect")

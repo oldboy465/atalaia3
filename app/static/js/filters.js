@@ -132,9 +132,15 @@ const FiltersManager = {
       if (data.summary && data.summary.trends) {
         const elDT = document.getElementById('txtDeltaTemp');
         const elDG = document.getElementById('txtDeltaGas');
+        const elKpiDT = document.getElementById('kpiDeltaT');
         const elAP = document.getElementById('txtAnomalyProb');
-        if (elDT) elDT.innerText = `${data.summary.trends.temp_delta_per_min} °C/min`;
-        if (elDG) elDG.innerText = `${data.summary.trends.gas_delta_per_min} ADC/min`;
+        
+        const dtVal = `${data.summary.trends.temp_delta_per_min} °C/min`;
+        const dgVal = `${data.summary.trends.gas_delta_per_min} ADC/min`;
+        
+        if (elDT) elDT.innerText = dtVal;
+        if (elDG) elDG.innerText = dgVal;
+        if (elKpiDT) elKpiDT.innerHTML = `${data.summary.trends.temp_delta_per_min} <span style="font-size:0.9rem;">°C/m</span>`;
         if (elAP) elAP.innerText = `${data.summary.trends.integrated_risk_score}`;
       }
     } catch (e) {

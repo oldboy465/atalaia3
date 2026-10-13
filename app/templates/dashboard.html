@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- BARRA DE FILTROS -->
+<!-- BARRA DE FILTROS E OPERAÇÕES EM TEMPO REAL -->
 <div class="glass-panel filter-bar">
   <div class="filter-group">
     <span class="filter-label">Janela:</span>
@@ -27,15 +27,15 @@
   </div>
 </div>
 
-<!-- CARDS DE KPIS E DERIVADOS -->
+<!-- CARDS DE KPIS PRIMÁRIOS E DERIVADOS TERMODINÂMICOS -->
 {% include "components/kpi_cards.html" %}
 
-<!-- GRÁFICOS BIOCLIMÁTICOS E GASES -->
+<!-- PAINEL DE TELEMETRIA DINÂMICA: PSICROMETRIA E GASES -->
 <div class="charts-grid-duo">
   <div class="glass-panel">
     <div class="chart-header">
       <span class="chart-title" style="color: var(--accent-cyan);">Dinâmica Psicrométrica & Calor</span>
-      <span style="font-size: 0.68rem; font-family: monospace; color: var(--accent-blue);">TEMP / HEAT INDEX / DEW POINT</span>
+      <span style="font-size: 0.68rem; font-family: monospace; color: var(--accent-blue);">TEMP / HEAT INDEX / ORVALHO / CONDENSAÇÃO</span>
     </div>
     <div class="chart-canvas-wrap">
       <canvas id="chartBioclimatic"></canvas>
@@ -53,12 +53,12 @@
   </div>
 </div>
 
-<!-- ANOMALIAS E ÍNDICE DE RISCO -->
+<!-- GRÁFICOS DE ANOMALIAS E MATRIZ DE RISCO -->
 <div class="charts-grid-trio">
   <div class="glass-panel">
     <div class="chart-header">
-      <span class="chart-title" style="color: var(--accent-purple);">Detecção de Anomalias & Bollinger Bands</span>
-      <span style="font-size: 0.68rem; font-family: monospace; color: var(--accent-purple);">ISOLATION FOREST + Z-SCORE</span>
+      <span class="chart-title" style="color: var(--accent-purple);">Detecção Multivariada de Anomalias & Bollinger</span>
+      <span style="font-size: 0.68rem; font-family: monospace; color: var(--accent-purple);">ISOLATION FOREST + Z-SCORE DINÂMICO</span>
     </div>
     <div class="chart-canvas-wrap">
       <canvas id="chartAnomalies"></canvas>
@@ -73,18 +73,27 @@
       {% include "components/realtime_gauge.html" %}
     </div>
 
-    <div style="border-top: 1px solid rgba(51, 65, 85, 0.6); padding-top: 12px; font-family: monospace; font-size: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
+    <!-- PAINEL DE DERIVADOS INSTANTÂNEOS DE ENGENHARIA -->
+    <div style="border-top: 1px solid rgba(56, 189, 248, 0.2); padding-top: 12px; font-family: monospace; font-size: 0.72rem; display: flex; flex-direction: column; gap: 6px;">
       <div style="display: flex; justify-content: space-between;">
-        <span style="color: var(--text-muted);">Delta Térmico:</span>
-        <span id="txtDeltaTemp" style="color: var(--accent-cyan); font-weight: bold;">0.0 °C/min</span>
+        <span style="color: var(--text-muted);">Delta Térmico (dT/dt):</span>
+        <span id="txtDeltaTemp" style="color: var(--accent-cyan); font-weight: bold;">0.00 °C/min</span>
       </div>
       <div style="display: flex; justify-content: space-between;">
-        <span style="color: var(--text-muted);">Gradiente MQ:</span>
-        <span id="txtDeltaGas" style="color: var(--accent-amber); font-weight: bold;">0.0 ADC/min</span>
+        <span style="color: var(--text-muted);">Gradiente MQ (dGas/dt):</span>
+        <span id="txtDeltaGas" style="color: var(--accent-amber); font-weight: bold;">0.00 ADC/min</span>
       </div>
       <div style="display: flex; justify-content: space-between;">
-        <span style="color: var(--text-muted);">Score de Anomalia:</span>
-        <span id="txtAnomalyProb" style="color: var(--accent-purple); font-weight: bold;">0.0</span>
+        <span style="color: var(--text-muted);">Margem Condensação:</span>
+        <span id="txtCondMargin" style="color: var(--accent-blue); font-weight: bold;">--.- °C</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-muted);">Entalpia do Ar Úmido:</span>
+        <span id="txtEnthalpy" style="color: var(--accent-emerald); font-weight: bold;">--.- kJ/kg</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-muted);">Défice de Vapor (VPD):</span>
+        <span id="txtVpd" style="color: var(--accent-purple); font-weight: bold;">-.--- kPa</span>
       </div>
     </div>
   </div>

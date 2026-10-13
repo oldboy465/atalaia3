@@ -21,7 +21,6 @@ class DataManager:
         hum = float(raw_sample.get("humidity", 0.0))
         mq = int(raw_sample.get("mq135_raw", 0))
 
-        # Injeta campos essenciais com fallbacks defensivos
         sample_copy = dict(raw_sample)
         if "session_id" not in sample_copy or sample_copy["session_id"] is None:
             sample_copy["session_id"] = self._current_session_fallback
@@ -30,11 +29,27 @@ class DataManager:
         if "timestamp" not in sample_copy:
             sample_copy["timestamp"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
+        # Cálculo completo e rigoroso de todas as métricas termodinâmicas e do sensor de gás
         bio = BioclimaticEngine.compute_all(temp, hum)
         gas = GasMetricsEngine.compute_all(mq)
 
+        # Fusão de todas as métricas no dicionário
         sample_copy.update(bio)
         sample_copy.update(gas)
+        
+        # Garante a injeção com nomes exatos para o front-end
+        sample_copy["heat_index"] = bio.get("heat_index", temp)
+        sample_copy["dew_point"] = bio.get("dew_point", 0.0)
+        sample_copy["humidex"] = bio.get("humidex", temp)
+        sample_copy["vpd_kpa"] = bio.get("vpd_kpa", 0.0)
+        sample_copy["enthalpy_kj_kg"] = bio.get("enthalpy_kj_kg", 0.0)
+        sample_copy["condensation_margin_c"] = bio.get("condensation_margin_c", 0.0)
+        sample_copy["absolute_humidity_g_m3"] = bio.get("absolute_humidity_g_m3", 0.0)
+        sample_copy["vapor_pressure_hpa"] = bio.get("vapor_pressure_hpa", 0.0)
+        sample_copy["voltage_v"] = gas.get("voltage_v", 0.0)
+        sample_copy["sensor_rs_kohm"] = gas.get("sensor_rs_kohm", 0.0)
+        sample_copy["estimated_ppm"] = gas.get("estimated_ppm", 400.0)
+
         return sample_copy
 
     def process_live_sample(self, current_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -43,17 +58,13 @@ class DataManager:
         return enriched
 
     def sync_ring_buffer(self, purge_after: bool = False) -> Dict[str, Any]:
-        """
-        purge_after=False -> Modo Copiar: descarrega sem tocar na memória do ESP32.
-        purge_after=True  -> Modo Extrair: descarrega e purga o LittleFS do ESP32.
-        """
         raw_bin = self.esp.fetch_ring_buffer()
         if not raw_bin:
-            return {"status": "error", "synced_records": 0, "message": "Buffer binário vazio ou indisponível."}
+            return {"status": "error", "synced_records": 0, "message": "Buffer binário indisponível no ESP32."}
 
         decoded_samples = BinaryDecoder.decode_buffer(raw_bin)
         if not decoded_samples:
-            return {"status": "warning", "synced_records": 0, "message": "Nenhuma amostra válida no buffer."}
+            return {"status": "warning", "synced_records": 0, "message": "Nenhuma amostra válida decodificada."}
 
         enriched_samples = [self.enrich_sample(s) for s in decoded_samples]
         analyzed_samples = AnomalyEngine.evaluate_batch(enriched_samples)
@@ -74,8 +85,12 @@ class DataManager:
 
     def get_dashboard_payload(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> Dict[str, Any]:
         history = self.db.query_filtered(start_date=start_date, end_date=end_date, limit=2000)
-        history_analyzed = AnomalyEngine.evaluate_batch(history)
+        
+        # Enriquecimento forçado de todo o histórico recuperado da base de dados
+        history_enriched = [self.enrich_sample(r) for r in history]
+        history_analyzed = AnomalyEngine.evaluate_batch(history_enriched)
         trends = TrendAnalyzer.compute_trends(history_analyzed)
+        
         latest = history_analyzed[-1] if history_analyzed else {}
 
         return {

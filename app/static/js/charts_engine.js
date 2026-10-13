@@ -1,5 +1,5 @@
 /**
- * Motor Chart.js Seguro com Interpolação de Tendência e Atualização Contínua
+ * Motor Chart.js Seguro com Interpolação de Tendência sem Quebra de Escala Vertical
  */
 const ChartsEngine = {
   chartBio: null,
@@ -40,7 +40,7 @@ const ChartsEngine = {
       }
     };
 
-    // 1. Bioclimático
+    // 1. Bioclimático (Escala protegida para temperaturas reais entre 0 e 60°C)
     const elBio = document.getElementById('chartBioclimatic');
     if (elBio) {
       this.chartBio = new Chart(elBio.getContext('2d'), {
@@ -52,7 +52,7 @@ const ChartsEngine = {
               label: 'Temp (°C)',
               data: [],
               borderColor: '#06b6d4',
-              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              backgroundColor: 'rgba(6, 182, 212, 0.12)',
               borderWidth: 2,
               fill: true,
               tension: 0.3
@@ -85,11 +85,21 @@ const ChartsEngine = {
             }
           ]
         },
-        options: commonOptions
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: {
+              ...commonOptions.scales.y,
+              suggestedMin: 15,
+              suggestedMax: 45
+            }
+          }
+        }
       });
     }
 
-    // 2. Gases MQ-135 e PPM
+    // 2. Gases MQ-135 e PPM (Escala dupla protegida)
     const elGas = document.getElementById('chartGases');
     if (elGas) {
       this.chartGas = new Chart(elGas.getContext('2d'), {
@@ -133,12 +143,17 @@ const ChartsEngine = {
           scales: {
             ...commonOptions.scales,
             y: {
-              ...commonOptions.scales.y,
               position: 'left',
-              title: { display: true, text: 'ADC 12-bit', color: '#64748b' }
+              suggestedMin: 200,
+              suggestedMax: 2500,
+              grid: { color: 'rgba(51, 65, 85, 0.25)' },
+              ticks: { color: '#10b981', font: { family: 'monospace', size: 9 } },
+              title: { display: true, text: 'ADC 12-bit', color: '#10b981' }
             },
             y1: {
               position: 'right',
+              suggestedMin: 200,
+              suggestedMax: 1500,
               grid: { drawOnChartArea: false },
               ticks: { color: '#f43f5e', font: { family: 'monospace', size: 9 } },
               title: { display: true, text: 'PPM', color: '#f43f5e' }
@@ -148,7 +163,7 @@ const ChartsEngine = {
       });
     }
 
-    // 3. Detecção de Anomalias & Bollinger
+    // 3. Anomalias & Bollinger Bands
     const elAnom = document.getElementById('chartAnomalies');
     if (elAnom) {
       this.chartAnom = new Chart(elAnom.getContext('2d'), {
@@ -188,25 +203,44 @@ const ChartsEngine = {
             }
           ]
         },
-        options: commonOptions
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: {
+              ...commonOptions.scales.y,
+              suggestedMin: 15,
+              suggestedMax: 45
+            }
+          }
+        }
       });
     }
   },
 
   calculateLinearTrend(values) {
-    const n = values.length;
+    const validPoints = values.filter(v => v !== null && !isNaN(v) && isFinite(v));
+    const n = validPoints.length;
     if (n < 2) return values.slice();
+
     let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
     for (let i = 0; i < n; i++) {
       sumX += i;
-      sumY += values[i];
-      sumXY += i * values[i];
+      sumY += validPoints[i];
+      sumXY += i * validPoints[i];
       sumXX += i * i;
     }
-    const denom = n * sumXX - sumX * sumX;
-    const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
+    const denom = (n * sumXX) - (sumX * sumX);
+    if (Math.abs(denom) < 0.000001) return values.slice();
+
+    const slope = (n * sumXY - sumX * sumY) / denom;
     const intercept = (sumY - slope * sumX) / n;
-    return values.map((_, i) => Number((slope * i + intercept).toFixed(2)));
+
+    return values.map((v, i) => {
+      if (v === null || isNaN(v)) return null;
+      const res = slope * i + intercept;
+      return isFinite(res) ? Number(res.toFixed(2)) : v;
+    });
   },
 
   toggleTrendVisibility() {
@@ -228,7 +262,6 @@ const ChartsEngine = {
     const temps = records.map(r => r.temperature);
     const mqs = records.map(r => r.mq135_raw);
 
-    // Bioclimático
     if (this.chartBio) {
       this.chartBio.data.labels = labels;
       this.chartBio.data.datasets[0].data = temps;
@@ -238,7 +271,6 @@ const ChartsEngine = {
       this.chartBio.update('none');
     }
 
-    // Gases
     if (this.chartGas) {
       this.chartGas.data.labels = labels;
       this.chartGas.data.datasets[0].data = mqs;
@@ -247,7 +279,6 @@ const ChartsEngine = {
       this.chartGas.update('none');
     }
 
-    // Anomalias
     if (this.chartAnom) {
       this.chartAnom.data.labels = labels;
       this.chartAnom.data.datasets[0].data = temps;

@@ -71,8 +71,7 @@ class DatabaseManager:
                 cursor.execute(query, data)
                 conn.commit()
                 return cursor.rowcount > 0
-            except sqlite3.Error as err:
-                print(f"[DB ERROR] Falha no insert: {err}")
+            except sqlite3.Error:
                 return False
 
     def insert_batch(self, samples: List[Dict[str, Any]], source: str = "SYNC") -> int:
@@ -127,5 +126,52 @@ class DatabaseManager:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(sql, params)
-            rows = cursor.fetchall()
-            return [dict(row) for row in rows]
+            return [dict(row) for row in cursor.fetchall()]
+
+    def query_table_paginated(self, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as total FROM telemetry")
+            total = cursor.fetchone()["total"]
+
+            if page_size <= 0:
+                limit = total
+                offset = 0
+            else:
+                limit = page_size
+                offset = (page - 1) * page_size
+
+            cursor.execute("SELECT * FROM telemetry ORDER BY id DESC LIMIT ? OFFSET ?", (limit, offset))
+            rows = [dict(r) for r in cursor.fetchall()]
+            return {
+                "records": rows,
+                "total": total,
+                "page": page,
+                "page_size": page_size
+            }
+
+    def delete_record_by_id(self, record_id: int) -> bool:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM telemetry WHERE id = ?", (record_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+
+    def delete_records_batch(self, record_ids: List[int]) -> int:
+        if not record_ids:
+            return 0
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            placeholders = ",".join(["?"] * len(record_ids))
+            cursor.execute(f"DELETE FROM telemetry WHERE id IN ({placeholders})", record_ids)
+            conn.commit()
+            return cursor.rowcount
+
+    def purge_all_records(self) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM telemetry")
+            conn.commit()
+            deleted = cursor.rowcount
+            cursor.execute("VACUUM")
+            return deleted

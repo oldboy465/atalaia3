@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-panel" style="display: flex; flex-direction: column; gap: 16px;">
+  <!-- CABEÇALHO DA TABELA E AÇÕES EM LOTE -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 14px;">
+    <div>
+      <h2 style="font-size: 1.2rem; font-weight: 800; font-family: monospace; color: var(--accent-cyan);">
+        🗄️ AUDITORIA E GESTÃO DO BANCO DE DADOS
+      </h2>
+      <p style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">
+        Seleção múltipla, exclusão em lote, paginação e purga do histórico local SQLite.
+      </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <span style="font-size: 0.75rem; font-family: monospace; color: var(--text-muted);">Exibir:</span>
+      <select id="selectPageSize" class="input-dark">
+        <option value="20" selected>20 linhas</option>
+        <option value="50">50 linhas</option>
+        <option value="0">Todas as linhas</option>
+      </select>
+
+      <button id="btnDeleteSelected" class="btn-action" style="border-color: rgba(244, 63, 94, 0.5); color: var(--accent-rose);" disabled>
+        🗑️ EXCLUIR SELECIONADOS (<span id="txtSelectedCount">0</span>)
+      </button>
+
+      <button id="btnPurgeAllDb" class="btn-action" style="background: rgba(244, 63, 94, 0.15); border-color: var(--accent-rose); color: var(--accent-rose);">
+        ⚠️ LIMPAR BANCO TOTAL
+      </button>
+    </div>
+  </div>
+
+  <!-- TABELA DE TELEMETRIA -->
+  <div style="overflow-x: auto; width: 100%;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 40px; text-align: center;">
+            <input type="checkbox" id="chkSelectAll">
+          </th>
+          <th>ID</th>
+          <th>Timestamp</th>
+          <th>Sessão</th>
+          <th>Uptime</th>
+          <th>Temp (°C)</th>
+          <th>Umidade (%)</th>
+          <th>Sensação (HI)</th>
+          <th>Orvalho (°C)</th>
+          <th>MQ-135</th>
+          <th>PPM</th>
+          <th>Chuva</th>
+          <th>Incêndio</th>
+          <th>Anomalia</th>
+          <th>Origem</th>
+          <th style="text-align: center;">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tableRecordsBody">
+        <tr>
+          <td colspan="16" style="text-align: center; color: var(--text-muted); padding: 30px;">
+            Carregando base de telemetria...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINAÇÃO -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid rgba(56, 189, 248, 0.2); padding-top: 14px;">
+    <div style="font-size: 0.75rem; font-family: monospace; color: var(--text-muted);">
+      Total: <span id="lblTotalRecords" style="color: var(--accent-cyan); font-weight: bold;">0</span> registos salvos
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button id="btnPrevPage" class="btn-action" disabled>&laquo; Anterior</button>
+      <span style="font-size: 0.75rem; font-family: monospace;">Página <span id="lblCurrentPage" style="color: var(--accent-cyan); font-weight: bold;">1</span></span>
+      <button id="btnNextPage" class="btn-action">Próxima &raquo;</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/records_manager.js') }}"></script>
+{% endblock %}
