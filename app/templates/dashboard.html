@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- BARRA DE FILTROS E OPERAÇÕES EM TEMPO REAL -->
-<div class="glass-panel filter-bar">
+<!-- BARRA DE CONTROLE ULTRA-DINÂMICA DE FILTROS E LINHAS DE TENDÊNCIA -->
+<div class="glass-panel filter-bar glow-box">
   <div class="filter-group">
     <span class="filter-label">Janela:</span>
     <button class="filter-chip active" data-range="15m">15 MIN</button>
@@ -30,12 +30,12 @@
 <!-- CARDS DE KPIS PRIMÁRIOS E DERIVADOS TERMODINÂMICOS -->
 {% include "components/kpi_cards.html" %}
 
-<!-- PAINEL DE TELEMETRIA DINÂMICA: PSICROMETRIA E GASES -->
+<!-- NÚCLEO 1 DE TELEMETRIA: PSICROMETRIA & ESPECTRO DE GASES -->
 <div class="charts-grid-duo">
   <div class="glass-panel">
     <div class="chart-header">
       <span class="chart-title" style="color: var(--accent-cyan);">Dinâmica Psicrométrica & Calor</span>
-      <span style="font-size: 0.68rem; font-family: monospace; color: var(--accent-blue);">TEMP / HEAT INDEX / ORVALHO / CONDENSAÇÃO</span>
+      <span style="font-size: 0.68rem; font-family: monospace; color: var(--accent-blue);">TEMP / HEAT INDEX / ORVALHO</span>
     </div>
     <div class="chart-canvas-wrap">
       <canvas id="chartBioclimatic"></canvas>
@@ -53,7 +53,32 @@
   </div>
 </div>
 
-<!-- GRÁFICOS DE ANOMALIAS E MATRIZ DE RISCO -->
+<!-- NÚCLEO 2 RESGATADO DO ATALAIA 1: DISPERSÃO CO2/UMIDADE & BARRAS DE TENDÊNCIA -->
+<div class="charts-grid-duo">
+  <!-- Gráfico de Dispersão Físico-Química -->
+  <div class="glass-panel">
+    <div class="chart-header">
+      <span class="chart-title" style="color: var(--accent-amber);">Dispersão: Concentração de Gás vs Umidade Relativa</span>
+      <span style="font-size: 0.68rem; font-family: monospace; color: var(--accent-amber);">SATURAÇÃO CORRELACIONADA</span>
+    </div>
+    <div class="chart-canvas-wrap">
+      <canvas id="chartScatterGasHum"></canvas>
+    </div>
+  </div>
+
+  <!-- Gráfico de Carga em Barras Comparativas Recentes -->
+  <div class="glass-panel">
+    <div class="chart-header">
+      <span class="chart-title" style="color: var(--accent-blue);">Tendência de Carga Recente: MQ-135 vs PPM</span>
+      <span style="font-size: 0.68rem; font-family: monospace; color: var(--accent-blue);">HISTÓRICO RECENTE EM BARRAS</span>
+    </div>
+    <div class="chart-canvas-wrap">
+      <canvas id="chartBarGasRecent"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- NÚCLEO 3: DETECÇÃO DE ANOMALIAS & MATRIZ DE RISCO (IRI) -->
 <div class="charts-grid-trio">
   <div class="glass-panel">
     <div class="chart-header">
@@ -96,6 +121,45 @@
         <span id="txtVpd" style="color: var(--accent-purple); font-weight: bold;">-.--- kPa</span>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- NÚCLEO 4: QUADRO DE PARÂMETROS E MOMENTOS ESTATÍSTICOS (DO ATALAIA 1) -->
+<div class="glass-panel" style="margin-top: 10px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+    <div>
+      <h3 style="font-size: 1rem; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em;">
+        📐 Momentos Estatísticos da Amostra (com Intervalos de Confiança)
+      </h3>
+      <p style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">
+        Agregações sobre a janela ativa: Média, Mediana, Desvio Padrão (σ), Coeficiente de Variação (CV%) e Intervalos t-Student.
+      </p>
+    </div>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Grandeza Física</th>
+          <th>N Amostras</th>
+          <th>Média (μ)</th>
+          <th>Mediana</th>
+          <th>Mín</th>
+          <th>Máx</th>
+          <th>Desvio Padrão (σ)</th>
+          <th>CV (%)</th>
+          <th style="text-align: center;">IC 95% (t-Student)</th>
+        </tr>
+      </thead>
+      <tbody id="statsTableBody">
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px;">
+            Aguardando sincronização de amostras...
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
