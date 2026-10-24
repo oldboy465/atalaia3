@@ -1,0 +1,18 @@
+# Build & Compilation Cache
+.build_cache/
+*.bin
+*.o
+*.d
+*.libsdetect.d
+*.merged
+*.cache
+
+# Editor & OS Files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+
+# Logs and local backups
+*.log
+estrutura_*.txt
