@@ -13,6 +13,6 @@
 Thumbs.db
 Desktop.ini
 
-# Logs and local backups
+# Logs & Local Backups
 *.log
 estrutura_*.txt
